@@ -13,8 +13,6 @@ local p,m = Color(255,50,25),"[LagDetect] "
 local cv = GetConVar("phys_timescale")
 util.AddNetworkString("lagdetect_notify")
 
-MsgC(p,m,msgcolor,"Loaded!\n")
-game.ConsoleCommand("phys_timescale 1\n")
 local function GetAdmins()
     local tbl = {}
     for _,ply in player.Iterator() do
@@ -126,6 +124,10 @@ local function avg(tbl,div)
     avg = avg/div
     return avg
 end
+
+Notify(false,{msgcolor,"Server Loaded!"})
+game.ConsoleCommand("phys_timescale 1\n")
+
 hook.Add("Think","lagdetector",function()
     local mult = 0.7 + speed*0.3
     t_raw = physenv.GetLastSimulationTime()*1000
@@ -185,7 +187,7 @@ local overlap_l = 0
 local overlap_n = 0
 hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
     timer.Simple(0,function()
-        if not isValid(ent) then return end
+        if not IsValid(ent) then return end
         if not IsValid(ent:GetPhysicsObject()) then return end
         ent.owner = ent:CPPIGetOwner()
         if ent.owner:IsWorld() then return end
