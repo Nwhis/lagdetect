@@ -106,7 +106,8 @@ local function CooldownDone() -- begin ramping timescale back up
         if speed == 1 then
             timer.Remove("recover")
             level = #speeds+1
-            Notify(false,{Color(50,255,0),"No lag detected, timescale returned to normal!"})
+            Notify(false,{Color(50,255,0),"No lag detected, timescale returned to normal!"},
+                {"[LagDetect] Physics timescale restored!",4,Color(50,255,0)})
             return
         end
         speed = math.Round(math.min(speed*1.33 + 0.01,1),2)
@@ -198,7 +199,7 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         if overlap_n > overlap_l then
             Notify(true,{
                 team.GetColor(ent.owner:Team()),ent.owner:GetName(),
-                msgcolor," is spawning a lot of props! (",
+                msgcolor," is spawning a lot of intersecting props! (",
                 HSVToColor(math.max(0,75 - #lastcreated*3),0.8,1),#lastcreated,
                 msgcolor," props, ",
                 HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
