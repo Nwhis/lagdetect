@@ -76,7 +76,7 @@ local function Defuse(svr)
     net.WriteUInt(math.Round(percent),7) -- what percent of all props
     net.WriteFloat(speed) -- current timescale
     net.WriteFloat(t) -- lag time
-    net.WriteFloat(Cooldown(level,k)) -- delay time
+    net.WriteFloat(Cooldown(level,t)) -- delay time
     net.Broadcast()
 end
 
