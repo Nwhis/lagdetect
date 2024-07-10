@@ -16,6 +16,22 @@ util.AddNetworkString("lagdetect_notify")
 MsgC(p,m,msgcolor,"Loaded!\n")
 game.ConsoleCommand("phys_timescale 1\n")
 
+local function FindIntersects(svr)
+    local intersects = {}
+    for _,ent in ipairs(ents.FindByClass("prop_physics")) do
+        ent = ent:GetPhysicsObject()
+        if not ent:IsPenetrating() then continue end
+        table.insert(intersects,ent)
+    end
+    if svr == 1 then -- it is very dangerous and we must deal with it
+        MsgC(p,m,Color(255,150,25),"Froze all intersecting props!\n")
+        for _,ent in ipairs(intersects) do
+            ent:EnableMotion(false)
+        end
+    end
+    return intersects
+end
+
 local function Defuse(svr)
     local newspeed = speeds[svr]
     local svrc = HSVToColor(-svrcolor + svr*svrcolor,0.8,1)
@@ -26,21 +42,10 @@ local function Defuse(svr)
     game.ConsoleCommand("phys_timescale "..tostring(newspeed).."\n")
     speed = newspeed
     -- find intersecting props
-    local intersects = {}
-    for _,ent in ipairs(ents.FindByClass("prop_physics")) do
-        ent = ent:GetPhysicsObject()
-        if not ent:IsPenetrating() then continue end
-        table.insert(intersects,ent)
-    end
+    local intersects = FindIntersects(svr)
     if #intersects == 0 then
         MsgC(p,m,msgcolor,"No intersecting entities detected!\n")
         return
-    end
-    if svr == 1 then -- it is very dangerous and we must deal with it
-        MsgC(p,m,Color(255,150,25),"Froze all intersecting props!")
-        for _,ent in ipairs(intersects) do
-            ent:EnableMotion(false)
-        end
     end
     -- find owner of the most props
     local owners = {}
@@ -107,6 +112,7 @@ hook.Add("Think","lagdetector",function()
                         return
                     end
                     MsgC(p,m,msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale...\n")
+                    FindIntersects(1)
                     timer.Adjust("cooldown",Cooldown(level))
                     timer.Start("cooldown")  -- refresh the cooldown
                 end
