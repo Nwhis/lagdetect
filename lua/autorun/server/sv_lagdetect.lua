@@ -17,13 +17,16 @@ MsgC(p,m,msgcolor,"Loaded!\n")
 game.ConsoleCommand("phys_timescale 1\n")
 
 local function FindIntersects(svr)
+    local allents = ents.FindByClass("prop_*")
+    table.Add(allents,ents.FindByClass("func_physbox"))
     local intersects = {}
-    for _,ent in ipairs(ents.FindByClass("prop_physics")) do
+    for _,ent in ipairs(allents) do
         ent = ent:GetPhysicsObject()
         if not ent:IsPenetrating() then continue end
         table.insert(intersects,ent)
     end
     if svr == 1 then -- it is very dangerous and we must deal with it
+        local avg = 
         MsgC(p,m,Color(255,150,25),"Froze all intersecting props!\n")
         for _,ent in ipairs(intersects) do
             ent:EnableMotion(false)
