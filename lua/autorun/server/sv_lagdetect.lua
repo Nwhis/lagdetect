@@ -195,7 +195,7 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         end
         if #lastcreated == 1 then return end
         overlap = overlap + GetOverlap(ent,lastcreated[#lastcreated-1])
-        overlap_n = math.floor(overlap/1.5)
+        overlap_n = math.max(math.Round((overlap-1.49)/3),0)
         if overlap_n > overlap_l then
             Notify(true,{
                 team.GetColor(ent.owner:Team()),ent.owner:GetName(),
@@ -204,8 +204,8 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
                 msgcolor," props, ",
                 HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
                 msgcolor," total overlap)"},
-                {ent.owner:GetName().." is spawning a lot of props! ("..tostring(#lastcreated)..")",
-                math.min(4+overlap_n,12),Color(255,125,0)
+                {ent.owner:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
+                math.min(4+overlap_n,12),Color(255,200,0)
             })
         end
         overlap_l = overlap_n
