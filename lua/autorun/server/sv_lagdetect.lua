@@ -1,6 +1,6 @@
 local threshold_start = {150,60,30,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
 local speeds = {0,0.03,0.3,0.75} -- corresponding timescales to use
-local function Cooldown(level) return 3+(#speeds-level)*1.5 end -- how long to stay at the slower speed before ramping back up
+local function Cooldown(level,ms) return math.Min(3+(#speeds-level) + ms/30,20) end -- how long to stay at the slower speed before ramping back up
 
 local svrcolor = 90/#speeds
 
@@ -76,6 +76,7 @@ local function Defuse(svr)
     net.WriteUInt(math.Round(percent),7) -- what percent of all props
     net.WriteFloat(speed) -- current timescale
     net.WriteFloat(t) -- lag time
+    net.WriteFloat(Cooldown(level,k)) -- delay time
     net.Broadcast()
 end
 
@@ -101,7 +102,7 @@ hook.Add("Think","lagdetector",function()
     t = math.Round((t_raw-0.001)/mult,2)
     for k,v in ipairs(threshold_start) do
         if t > v then
-            if level == k then -- if the current level is lower (more severe) or the same as this
+            if level == k then -- if we are already at this level
                 if timer.Exists("cooldown") and timer.TimeLeft("cooldown") < 1.5 then -- if timer is about to expire
                     local ts = math.Round(cv:GetFloat(),2)
                     if ts != speed then
@@ -112,8 +113,8 @@ hook.Add("Think","lagdetector",function()
                         return
                     end
                     MsgC(p,m,msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale...\n")
-                    if k == 1 then FindIntersects(1) end
-                    timer.Adjust("cooldown",Cooldown(level))
+                    if level == 1 then FindIntersects(1) end
+                    timer.Adjust("cooldown",Cooldown(level,t))
                     timer.Start("cooldown")  -- refresh the cooldown
                 end
                 return
@@ -121,7 +122,7 @@ hook.Add("Think","lagdetector",function()
             if level < k then return end
             level = k
             Defuse(level)
-            timer.Create("cooldown",Cooldown(level),1,CooldownDone)
+            timer.Create("cooldown",Cooldown(level,t),1,CooldownDone)
             timer.Remove("recover")
             return
         end

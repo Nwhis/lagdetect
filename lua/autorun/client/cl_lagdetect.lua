@@ -15,6 +15,7 @@ net.Receive("lagdetect_notify",function()
     local percent = net.ReadUInt(7)
     local speed = math.Round(net.ReadFloat(),2)
     local t = math.Round(net.ReadFloat(),2)
+    local cd = math.Round(net.ReadFloat(),1)
 
     --notification.AddLegacy("[LagDetect] Physics timescale set to "..tostring(math.Round(speed,2)),0,6)
     bs.Notify("[LagDetect] Physics timescale set to "..tostring(math.Round(speed,2)),6,Color(255,200,0),true)
@@ -22,13 +23,14 @@ net.Receive("lagdetect_notify",function()
     MsgC(p,m,msgcolor,"Physics lag detected (last tick required ",
         svrc,tostring(t).."ms",
         msgcolor,")! Slowing physics to ",
-        Color(120,200,255),tostring(speed).."x\n")
+        Color(120,200,255),tostring(speed).."x",
+        msgcolor," and waiting ",cd,"s\n")
     
     if not LocalPlayer():IsAdmin() then return end
 
     if speed == 0 then
         bs.Notify("[LagDetect] Severe lag!! Freezing all intersecting props.",6,Color(255,100,0),true)
-        MsgC(p,m,Color(255,100,0),"Severe lag!! Freezing all intersecting props.\n")
+        MsgC(p,m,Color(255,100,0),"Severe lag!!",msgcolor," Freezing all intersecting props.\n")
     end
     local c,n,s = Color(255,255,255),"World",":3"
     if not ply:IsWorld() then
