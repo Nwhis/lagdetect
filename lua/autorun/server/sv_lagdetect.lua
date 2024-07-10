@@ -48,10 +48,14 @@ local function Defuse(svr)
         total = total + num
     end
     local percent = math.Round((owners[most]/total)*100,1)
+    local c,n,s = Color(255,255,255),"World",":3"
+    if not most:IsWorld() then
+        c,n,s = team.GetColor(most:Team()),most:GetName(),most:SteamID()
+    end
     MsgC(p,m,Color(255,60,40),#intersects,
         msgcolor," possible intersecting ents, ",
-        team.GetColor(most:Team()),most:GetName(),
-        msgcolor," [",most:SteamID(),"] has the most (",
+        c,n,
+        msgcolor," [",s,"] has the most (",
         HSVToColor(90-percent*0.9,0.8,1),owners[most],", ",percent,"%",
         msgcolor,")\n")
     net.Start("lagdetect_notify")

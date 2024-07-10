@@ -23,9 +23,14 @@ net.Receive("lagdetect_notify",function()
     
     if not LocalPlayer():IsAdmin() then return end
 
-    notification.AddLegacy("[LagDetect] "..ply:GetName().." has "..tostring(num).." intersecting props ("..tostring(percent).."%)",0,8)
-    MsgC(p,m,team.GetColor(ply:Team()),ply:GetName(),
-        msgcolor," [",ply:SteamID(),"] has ",
+    local c,n,s = Color(255,255,255),"World",":3"
+    if not ply:IsWorld() then
+        c,n,s = team.GetColor(ply:Team()),ply:GetName(),ply:SteamID()
+    end
+
+    notification.AddLegacy("[LagDetect] "..n.." has "..tostring(num).." intersecting props ("..tostring(percent).."%)",0,8)
+    MsgC(p,m,c,n,
+        msgcolor," [",s,"] has ",
         Color(255,60,40),num,
         msgcolor," possible intersecting ents (",
         HSVToColor(90-percent*0.9,0.8,1),percent,"%",
