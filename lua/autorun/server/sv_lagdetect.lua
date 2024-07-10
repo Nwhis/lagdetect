@@ -55,6 +55,15 @@ local function Defuse(svr)
     local intersects = FindIntersects(svr)
     if #intersects == 0 then
         MsgC(p,m,msgcolor,"No intersecting entities detected!\n")
+        net.Start("lagdetect_notify")
+        net.WriteBool(true) -- slowdown message
+        net.WriteEntity(game.GetWorld()) -- player with most props
+        net.WriteUInt(0,10) -- how many props
+        net.WriteUInt(0,7) -- what percent of all props
+        net.WriteFloat(speed) -- current timescale
+        net.WriteFloat(t) -- lag time
+        net.WriteFloat(Cooldown(level,t)) -- delay time
+        net.Broadcast()
         return
     end
     -- find owner of the most props
