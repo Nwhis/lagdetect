@@ -1,4 +1,4 @@
-local threshold_start = {150,60,30,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
+local threshold_start = {120,50,25,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
 local speeds = {0,0.03,0.3,0.75} -- corresponding timescales to use
 local function Cooldown(level,ms) return math.Round(math.min(3+(#speeds-level) + ms/30,20),1) end -- how long to stay at the slower speed before ramping back up
 
@@ -129,7 +129,7 @@ Notify(false,{msgcolor,"Server Loaded!"})
 game.ConsoleCommand("phys_timescale 1\n")
 
 hook.Add("Think","lagdetector",function()
-    local mult = 0.7 + speed*0.3
+    local mult = 0.6 + speed*0.4
     t_raw = physenv.GetLastSimulationTime()*1000
     t = math.Round((t_raw-0.001)/mult,2)
     --[[]
