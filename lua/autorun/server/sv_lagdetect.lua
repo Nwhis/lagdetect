@@ -189,7 +189,7 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         ent.owner = ent:CPPIGetOwner()
         if ent.owner:IsWorld() then return end
         if not ent:GetPhysicsObject():IsMotionEnabled() then return end
-        if ent.owner ~= lastcreated[1].owner then lastcreated = {} overlap = 0 overlap_n = 0 end
+        if ent.owner ~= lastcreated[1].owner then lastcreated = {} overlap = 0 overlap_n = 0 overlap_l = 0 end
         table.insert(lastcreated,ent)
         for k, v in pairs(lastcreated) do
             if not IsValid(v) then table.remove(lastcreated,k) end
