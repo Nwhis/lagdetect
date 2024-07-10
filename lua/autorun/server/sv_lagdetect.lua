@@ -1,6 +1,6 @@
 local threshold_start = {150,60,30,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
 local speeds = {0,0.03,0.3,0.75} -- corresponding timescales to use
-local function Cooldown(level,ms) return math.Min(3+(#speeds-level) + ms/30,20) end -- how long to stay at the slower speed before ramping back up
+local function Cooldown(level,ms) return math.min(3+(#speeds-level) + ms/30,20) end -- how long to stay at the slower speed before ramping back up
 
 local svrcolor = 90/#speeds
 
@@ -15,7 +15,26 @@ util.AddNetworkString("lagdetect_notify")
 
 MsgC(p,m,msgcolor,"Loaded!\n")
 game.ConsoleCommand("phys_timescale 1\n")
-
+local function GetAdmins()
+    local tbl = {}
+    for _,ply in player.Iterator() do
+        if ply:IsAdmin() then table.insert(tbl,ply) end
+    end
+    return tbl
+end
+local function Notify(adminonly, console, notif)
+    net.Start("lagdetect_notify")
+    net.WriteTable(console,true)
+    net.WriteBool(notif and true)
+    if notif then
+        net.WriteString(notif[1])
+        net.WriteUInt(notif[2],6)
+        net.WriteVector(notif[3]:ToVector())
+    end
+    if adminonly then net.Send(GetAdmins()) else net.Broadcast() end
+    MsgC(p,m,unpack(console))
+    MsgC("\n")
+end
 local function FindIntersects(svr)
     local allents = ents.FindByClass("prop_*")
     table.Add(allents,ents.FindByClass("func_physbox"))
@@ -37,7 +56,7 @@ local function FindIntersects(svr)
                 end
             else total = total + 1 ent:EnableMotion(false) end
         end
-        MsgC(p,m,Color(255,150,25),"Froze all intersecting and constrained props! (",total,")\n")
+        Notify(true,{Color(255,150,25),"Froze all intersecting and constrained props! (",total,")"})
     end
     return intersects
 end
@@ -45,27 +64,16 @@ end
 local function Defuse(svr)
     local newspeed = speeds[svr]
     local svrc = HSVToColor(-svrcolor + svr*svrcolor,0.8,1)
-    MsgC(p,m,msgcolor,(speed == 1 and "Lagging" or "Still lagging!").." (last tick required ",
+    Notify(false,{msgcolor,(speed == 1 and "Lagging" or "Still lagging!").." (last tick required ",
         svrc,tostring(math.Round(t,2)).."ms",
         msgcolor,")! Slowing down to ",
-        Color(120,200,255),tostring(newspeed).."\n")
+        Color(120,200,255),tostring(newspeed)},
+        {m.."Physics timescale set to "..tostring(newspeed),6,Color(255,200,0)})
     game.ConsoleCommand("phys_timescale "..tostring(newspeed).."\n")
     speed = newspeed
     -- find intersecting props
     local intersects = FindIntersects(svr)
-    if #intersects == 0 then
-        MsgC(p,m,msgcolor,"No intersecting entities detected!\n")
-        net.Start("lagdetect_notify")
-        net.WriteBool(true) -- slowdown message
-        net.WriteEntity(game.GetWorld()) -- player with most props
-        net.WriteUInt(0,10) -- how many props
-        net.WriteUInt(0,7) -- what percent of all props
-        net.WriteFloat(speed) -- current timescale
-        net.WriteFloat(t) -- lag time
-        net.WriteFloat(Cooldown(level,t)) -- delay time
-        net.Broadcast()
-        return
-    end
+    if #intersects == 0 then Notify(true,{msgcolor,"No intersecting entities detected!"}) return end
     -- find owner of the most props
     local owners = {}
     for _,ent in ipairs(intersects) do
@@ -82,34 +90,26 @@ local function Defuse(svr)
     if not most:IsWorld() then
         c,n,s = team.GetColor(most:Team()),most:GetName(),most:SteamID()
     end
-    MsgC(p,m,Color(255,60,40),#intersects,
+    Notify(true,{Color(255,60,40),#intersects,
         msgcolor," possible intersecting ents, ",
         c,n,
         msgcolor," [",s,"] has the most (",
         HSVToColor(90-percent*0.9,0.8,1),owners[most],", ",percent,"%",
-        msgcolor,")\n")
-    net.Start("lagdetect_notify")
-    net.WriteBool(true) -- slowdown message
-    net.WriteEntity(most) -- player with most props
-    net.WriteUInt(owners[most],10) -- how many props
-    net.WriteUInt(math.Round(percent),7) -- what percent of all props
-    net.WriteFloat(speed) -- current timescale
-    net.WriteFloat(t) -- lag time
-    net.WriteFloat(Cooldown(level,t)) -- delay time
-    net.Broadcast()
+        msgcolor,")"},
+        {"[LagDetect] "..n.." has "..tostring(owners[most]).." intersecting props ("..tostring(percent).."%)",10,Color(255,125,0)}
+    )
 end
 
 local function CooldownDone() -- begin ramping timescale back up
-    MsgC(p,m,Color(175,255,75),"Low lag detected, returning to normal speed...\n")
+    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."})
     timer.Create("recover",0.5,0,function()
         if speed == 1 then
             timer.Remove("recover")
             level = #speeds+1
-            MsgC(p,m,Color(50,255,0),"No lag detected, timescale returned to normal!\n")
-            net.Start("lagdetect_notify") net.WriteBool(false) net.Broadcast()
+            Notify(false,{Color(50,255,0),"No lag detected, timescale returned to normal!"})
             return
         end
-        speed = math.Round(math.Min(speed*1.33 + 0.01,1),2)
+        speed = math.Round(math.min(speed*1.33 + 0.01,1),2)
         level = level + 0.5
         game.ConsoleCommand("phys_timescale "..tostring(speed).."\n")
     end)
@@ -140,13 +140,13 @@ hook.Add("Think","lagdetector",function()
                 if timer.Exists("cooldown") and timer.TimeLeft("cooldown") < 1.5 then -- if timer is about to expire
                     local ts = math.Round(cv:GetFloat(),2)
                     if ts != speed then
-                        MsgC(p,m,"[WARN] ",Color(255,225,75),"Physics timescale was overridden! Readjusting...\n")
+                        Notify(true,{"[WARN] ",Color(255,225,75),"Physics timescale was overridden! Readjusting..."})
                         level = #speeds+1
                         timer.Remove("cooldown")
                         timer.Remove("recover")
                         return
                     end
-                    MsgC(p,m,msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale...\n")
+                    Notify(true,{msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale..."})
                     if level == 1 then FindIntersects(1) end
                     timer.Adjust("cooldown",Cooldown(level,t))
                     timer.Start("cooldown")  -- refresh the cooldown
@@ -161,4 +161,52 @@ hook.Add("Think","lagdetector",function()
             return
         end
     end
+end)
+
+
+local ENTITY = FindMetaTable("Entity")
+
+local function GetOverlap(ent1,ent2)
+    local p1 = ent1:WorldSpaceCenter()
+    local p2 = ent2:WorldSpaceCenter()
+    local ra,rb = ent1:GetPhysicsObject():GetAABB()
+    local r1 = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2 -- solving for best case scenario (flat props won't false positive)
+    ra,rb = ent2:GetPhysicsObject():GetAABB()
+    local r2 = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2
+    local dist = p1:Distance(p2)
+    local overlap = 1 - (dist/math.min(r1, r2)/2)
+    return math.Clamp(overlap,0,1)
+end
+local lastcreated = {game.GetWorld()}
+local overlap = 0
+local overlap_l = 0
+local overlap_n = 0
+hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
+    timer.Simple(0,function()
+        if not IsValid(ent:GetPhysicsObject()) then return end
+        ent.owner = ent:CPPIGetOwner()
+        if ent.owner:IsWorld() then return end
+        if not ent:GetPhysicsObject():IsMotionEnabled() then return end
+        if ent.owner ~= lastcreated[1].owner then lastcreated = {} overlap = 0 overlap_n = 0 end
+        table.insert(lastcreated,ent)
+        for k, v in pairs(lastcreated) do
+            if not IsValid(v) then table.remove(lastcreated,k) end
+        end
+        if #lastcreated == 1 then return end
+        overlap = overlap + GetOverlap(ent,lastcreated[#lastcreated-1])
+        overlap_n = math.floor(overlap/1.5)
+        if overlap_n > overlap_l then
+            Notify(true,{
+                team.GetColor(ent.owner:Team()),ent.owner:GetName(),
+                msgcolor," is spawning a lot of overlapping props! (",
+                HSVToColor(math.max(0,75 - #lastcreated*3),0.8,1),#lastcreated,
+                msgcolor," props, ",
+                HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
+                msgcolor," total overlap)"},
+                {ent.owner:GetName().." is spawning a lot of overlapping props! ("..tostring(#lastcreated)..")",
+                math.min(4+overlap_n,12),Color(255,125,0)
+            })
+        end
+        overlap_l = overlap_n
+    end)
 end)
