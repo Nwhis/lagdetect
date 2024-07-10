@@ -121,7 +121,7 @@ hook.Add("Think","lagdetector",function()
     t = math.Round((t_raw-0.001)/mult,2)
 
     table.insert(t_avg_tbl,t)
-    if #t_avg_tbl > 33 then table.remove(1) end
+    if #t_avg_tbl > 33 then table.remove(t_avg_tbl,1) end
     t_avg = avg(t_avg_tbl)
 
     for k,v in ipairs(threshold_start) do
