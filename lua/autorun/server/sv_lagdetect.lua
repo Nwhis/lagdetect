@@ -26,12 +26,18 @@ local function FindIntersects(svr)
         if not ent:IsPenetrating() then continue end
         table.insert(intersects,ent)
     end
+    local total = 0
     if svr == 1 then -- it is very dangerous and we must deal with it
-        local avg = 
-        MsgC(p,m,Color(255,150,25),"Froze all intersecting props!\n")
         for _,ent in ipairs(intersects) do
-            ent:EnableMotion(false)
+            local realent = ent:GetEntity()
+            if constraint.HasConstraints(realent) then
+                for k,v in ipairs(constraint.GetAllConstrainedEntities(realent)) do
+                    total = total + 1
+                    ent:EnableMotion(false)
+                end
+            else total = total + 1 ent:EnableMotion(false) end
         end
+        MsgC(p,m,Color(255,150,25),"Froze all intersecting and constrained props! (",total,")\n")
     end
     return intersects
 end
