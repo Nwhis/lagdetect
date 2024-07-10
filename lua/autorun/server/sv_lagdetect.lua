@@ -196,7 +196,7 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         end
         if #lastcreated == 1 then return end
         overlap = overlap + GetOverlap(ent,lastcreated[#lastcreated-1])
-        overlap_n = math.max(math.ceil(((overlap/3)-0.5)^0.8),0)
+        overlap_n = math.ceil(math.max(((overlap/3)-0.5)^0.8),0)
         Notify(true,{overlap,",",overlap_n})
         if overlap_n > overlap_l then
             Notify(true,{
