@@ -36,6 +36,12 @@ local function Defuse(svr)
         MsgC(p,m,msgcolor,"No intersecting entities detected!\n")
         return
     end
+    if svr == 1 then -- it is very dangerous and we must deal with it
+        MsgC(p,m,Color(255,150,25),"Froze all intersecting props!")
+        for _,ent in ipairs(intersects) do
+            ent:EnableMotion(false)
+        end
+    end
     -- find owner of the most props
     local owners = {}
     for _,ent in ipairs(intersects) do
