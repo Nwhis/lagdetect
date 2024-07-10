@@ -195,8 +195,8 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     --if not ent:GetPhysicsObject():IsMotionEnabled() then return end
     
 
-    focused_owner = o
     if o ~= focused_owner then lastcreated = {} overlap = 0 overlap_n = 0 end
+    focused_owner = o
     table.insert(lastcreated,ent)
     for k, v in pairs(lastcreated) do
         if not IsValid(v) then table.remove(lastcreated,k) end
