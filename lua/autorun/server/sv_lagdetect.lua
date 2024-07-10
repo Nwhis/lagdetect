@@ -1,4 +1,4 @@
-local threshold_start = {120,50,25,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
+local threshold_start = {150,60,30,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
 local speeds = {0,0.03,0.3,0.75} -- corresponding timescales to use
 local function Cooldown(level,ms) return math.Round(math.min(3+(#speeds-level) + ms/30,20),1) end -- how long to stay at the slower speed before ramping back up
 
@@ -54,7 +54,8 @@ local function FindIntersects(svr)
                 end
             else total = total + 1 ent:EnableMotion(false) end
         end
-        Notify(true,{Color(255,150,25),"Severe lag!! Froze all intersecting and constrained props (",total,")"})
+        Notify(true,{Color(255,150,25),"Severe lag!! Froze all intersecting and constrained props (",total,")"},
+        {"Severe lag!! Froze all intersecting and constrained props ("..tostring(total)..")",4,Color(255,150,0)})
     end
     return intersects
 end
@@ -166,55 +167,51 @@ hook.Add("Think","lagdetector",function()
         end
     end
 end)
-
-
-local ENTITY = FindMetaTable("Entity")
-
+local cached_sizes = {}
+local function GetSmallestSize(ent)
+    local cached = cached_sizes[ent:GetModel()]
+    if cached then return cached end
+    local ra,rb = ent1:GetPhysicsObject():GetAABB()
+    local r = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2
+    if table.Count(cached_sizes) > 62 then cached_sizes = {} end
+    cached_sizes[ent:GetModel()] = r
+    return r
+end
+    
 local function GetOverlap(ent1,ent2)
     local p1 = ent1:WorldSpaceCenter()
     local p2 = ent2:WorldSpaceCenter()
-    local ra,rb = ent1:GetPhysicsObject():GetAABB()
-    local r1 = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2 -- solving for best case scenario (flat props won't false positive)
-    ra,rb = ent2:GetPhysicsObject():GetAABB()
-    local r2 = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2
     local dist = p1:Distance(p2)
+    local r1 = GetSmallestSize(ent1)
+    local r2 = GetSmallestSize(ent2)
     local overlap = 1 - (dist/math.min(r1, r2)/2)
     return math.Clamp(overlap,0,1)
 end
-local lastcreated = {game.GetWorld()}
-local overlap = 0
-local overlap_l = 0
-local overlap_n = 0
-local focused_owner
+
+local overlaps = {} -- tbl of players and how much overlap their latest prop spawns have
+
 hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
-    local o = ply
-    --if not o then return end
-    --if o:IsWorld() then return end
-    --if not ent:GetPhysicsObject():IsMotionEnabled() then return end
-    
-
-    if o ~= focused_owner then lastcreated = {} overlap = 0 overlap_n = 0 end
-    focused_owner = o
-    table.insert(lastcreated,ent)
-    for k, v in pairs(lastcreated) do
-        if not IsValid(v) then table.remove(lastcreated,k) end
+    local overlap = 0
+    for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
+        if ent == v then continue end
+        overlap = overlap + GetOverlap(ent,v)
     end
-    if #lastcreated == 1 then return end
-    overlap = overlap + GetOverlap(ent,lastcreated[#lastcreated-1])
-    overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
-    if overlap_n > overlap_l then
+    overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
+
+    local overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
+    if overlap_n > overlap[ply].notify then
         Notify(true,{
-            team.GetColor(o:Team()),o:GetName(),
+            team.GetColor(ply:Team()),ply:GetName(),
             msgcolor," is spawning a lot of intersecting props! (",
             HSVToColor(math.max(0,75 - #lastcreated*3),0.8,1),#lastcreated,
             msgcolor," props, ",
             HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
             msgcolor," total overlap)"},
-            {o:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
+            {ply:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
             math.min(4+overlap_n,12),Color(255,200,0)
         })
     end
-    overlap_l = overlap_n
+    overlaps[ply].notify = overlap_n
 end)
