@@ -189,11 +189,11 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
     timer.Simple(0,function()
         if not IsValid(ent) then return end
         if not IsValid(ent:GetPhysicsObject()) then return end
+        local o = ent:CPPIGetOwner()
+        if not o then return end
         if o:IsWorld() then return end
         if not ent:GetPhysicsObject():IsMotionEnabled() then return end
         
-        local o = ent:CPPIGetOwner()
-        if not o then return end
 
         ent.lagdetect_owner = o
         if o ~= lastcreated[1].lagdetect_owner then lastcreated = {} overlap = 0 overlap_n = 0 end
