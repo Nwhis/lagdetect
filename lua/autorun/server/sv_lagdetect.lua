@@ -1,6 +1,6 @@
 local threshold_start = {150,60,30,15} -- maximum processing time before slowing down, sorted most>least severe; 15ms = ~1 tick
 local speeds = {0,0.03,0.3,0.75} -- corresponding timescales to use
-local function Cooldown(level,ms) return math.min(3+(#speeds-level) + ms/30,20) end -- how long to stay at the slower speed before ramping back up
+local function Cooldown(level,ms) return math.Round(math.min(3+(#speeds-level) + ms/30,20),1) end -- how long to stay at the slower speed before ramping back up
 
 local svrcolor = 90/#speeds
 
@@ -56,7 +56,7 @@ local function FindIntersects(svr)
                 end
             else total = total + 1 ent:EnableMotion(false) end
         end
-        Notify(true,{Color(255,150,25),"Froze all intersecting and constrained props! (",total,")"})
+        Notify(true,{Color(255,150,25),"Severe lag!! Froze all intersecting and constrained props (",total,")"})
     end
     return intersects
 end
@@ -67,7 +67,8 @@ local function Defuse(svr)
     Notify(false,{msgcolor,(speed == 1 and "Lagging" or "Still lagging!").." (last tick required ",
         svrc,tostring(math.Round(t,2)).."ms",
         msgcolor,")! Slowing down to ",
-        Color(120,200,255),tostring(newspeed)},
+        Color(120,200,255),tostring(newspeed),
+        msgcolor,", and waiting ",Cooldown(level,t),"s"},
         {m.."Physics timescale set to "..tostring(newspeed),6,Color(255,200,0)})
     game.ConsoleCommand("phys_timescale "..tostring(newspeed).."\n")
     speed = newspeed
@@ -147,7 +148,7 @@ hook.Add("Think","lagdetector",function()
                         timer.Remove("recover")
                         return
                     end
-                    Notify(true,{msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale..."})
+                    Notify(true,{msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale for ",Cooldown(level,t),"s..."})
                     if level == 1 then FindIntersects(1) end
                     timer.Adjust("cooldown",Cooldown(level,t))
                     timer.Start("cooldown")  -- refresh the cooldown
