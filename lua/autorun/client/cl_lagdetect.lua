@@ -28,7 +28,7 @@ net.Receive("lagdetect_notify",function()
 
     if speed == 0 then
         bs.Notify("[LagDetect] Severe lag!! Freezing all intersecting props.",6,Color(255,100,0),true)
-        MsgC(p,m,Color(255,100,0),"Severe lag!! Freezing all intersecting props.")
+        MsgC(p,m,Color(255,100,0),"Severe lag!! Freezing all intersecting props.\n")
     end
     local c,n,s = Color(255,255,255),"World",":3"
     if not ply:IsWorld() then
