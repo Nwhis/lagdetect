@@ -105,13 +105,27 @@ local function CooldownDone() -- begin ramping timescale back up
         game.ConsoleCommand("phys_timescale "..tostring(speed).."\n")
     end)
 end
-
+local t_avg_tbl = {}
+local t_avg = 0
+local function avg(tbl)
+    local avg = 0
+    for k,v in ipairs(tbl) do
+        avg = avg + v
+    end
+    avg = avg/#tbl
+    return avg
+end
 hook.Add("Think","lagdetector",function()
     local mult = 0.5 + speed*0.5
     t_raw = physenv.GetLastSimulationTime()*1000
     t = math.Round((t_raw-0.001)/mult,2)
+
+    table.insert(t_avg_tbl,t)
+    if #t_avg_tbl > 33 then table.remove(1) end
+    t_avg = avg(t_avg_tbl)
+
     for k,v in ipairs(threshold_start) do
-        if t > v then
+        if t_avg > v or (k <= 2 and t > v) then
             if level == k then -- if we are already at this level
                 if timer.Exists("cooldown") and timer.TimeLeft("cooldown") < 1.5 then -- if timer is about to expire
                     local ts = math.Round(cv:GetFloat(),2)
