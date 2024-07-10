@@ -189,10 +189,12 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
     timer.Simple(0,function()
         if not IsValid(ent) then return end
         if not IsValid(ent:GetPhysicsObject()) then return end
-        ent.owner = ent:CPPIGetOwner()
-        if ent.owner:IsWorld() then return end
+        if o:IsWorld() then return end
         if not ent:GetPhysicsObject():IsMotionEnabled() then return end
-        if ent.owner ~= lastcreated[1].owner then lastcreated = {} overlap = 0 overlap_n = 0 end
+
+        local o = ent:CPPIGetOwner()
+        ent.lagdetect_owner = o
+        if o ~= lastcreated[1].lagdetect_owner then lastcreated = {} overlap = 0 overlap_n = 0 end
         table.insert(lastcreated,ent)
         for k, v in pairs(lastcreated) do
             if not IsValid(v) then table.remove(lastcreated,k) end
@@ -202,13 +204,13 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
         if overlap_n > overlap_l then
             Notify(true,{
-                team.GetColor(ent.owner:Team()),ent.owner:GetName(),
+                team.GetColor(o:Team()),o:GetName(),
                 msgcolor," is spawning a lot of intersecting props! (",
                 HSVToColor(math.max(0,75 - #lastcreated*3),0.8,1),#lastcreated,
                 msgcolor," props, ",
                 HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
                 msgcolor," total overlap)"},
-                {ent.owner:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
+                {o:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
                 math.min(4+overlap_n,12),Color(255,200,0)
             })
         end
