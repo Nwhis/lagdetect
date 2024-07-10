@@ -112,7 +112,7 @@ hook.Add("Think","lagdetector",function()
                         return
                     end
                     MsgC(p,m,msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale...\n")
-                    FindIntersects(1)
+                    if k == 1 then FindIntersects(1) end
                     timer.Adjust("cooldown",Cooldown(level))
                     timer.Start("cooldown")  -- refresh the cooldown
                 end
