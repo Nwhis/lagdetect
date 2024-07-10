@@ -59,6 +59,7 @@ local function Defuse(svr)
         HSVToColor(90-percent*0.9,0.8,1),owners[most],", ",percent,"%",
         msgcolor,")\n")
     net.Start("lagdetect_notify")
+    net.WriteBool(true)
     net.WriteEntity(most)
     net.WriteUInt(owners[most],10)
     net.WriteUInt(math.Round(percent),7)
@@ -74,7 +75,7 @@ local function CooldownDone() -- begin ramping timescale back up
             timer.Remove("recover")
             level = #speeds+1
             MsgC(p,m,Color(50,255,0),"No lag detected, timescale returned to normal!\n")
-            net.Start("lagdetect_notify") net.Broadcast()
+            net.Start("lagdetect_notify") net.WriteBool(false) net.Broadcast()
             return
         end
         speed = math.Round(math.Min(speed*1.33 + 0.01,1),2)

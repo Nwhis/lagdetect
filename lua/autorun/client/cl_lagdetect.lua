@@ -3,12 +3,13 @@ local p,m = Color(255,100,25),"[LagDetect] "
 
 MsgC(p,m,Color(255,255,255),"Client Loaded!\n")
 net.Receive("lagdetect_notify",function()
-    local ply = net.ReadEntity()
-    if not IsValid(ply) and not ply:IsWorld() then
+    local islag = net.ReadBool()
+    if not islag then
         notification.AddLegacy("[LagDetect] Physics timescale restored!",0,3)
         MsgC(p,m,Color(50,255,0),"No lag detected, timescale returned to normal!\n")
         return
     end
+    local ply = net.ReadEntity()
     local num = net.ReadUInt(10)
     local percent = net.ReadUInt(7)
     local speed = math.Round(net.ReadFloat(),2)
