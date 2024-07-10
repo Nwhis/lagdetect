@@ -116,22 +116,23 @@ local function CooldownDone() -- begin ramping timescale back up
 end
 local t_avg_tbl = {}
 local t_avg = 0
-local function avg(tbl)
+local function avg(tbl,div)
     local avg = 0
     for k,v in ipairs(tbl) do
         avg = avg + v
     end
-    avg = avg/#tbl
+    avg = avg/div
     return avg
 end
 hook.Add("Think","lagdetector",function()
     local mult = 0.5 + speed*0.5
     t_raw = physenv.GetLastSimulationTime()*1000
     t = math.Round((t_raw-0.001)/mult,2)
-
+    --[[]
     table.insert(t_avg_tbl,t)
     if #t_avg_tbl > 33 then table.remove(t_avg_tbl,1) end
-    t_avg = avg(t_avg_tbl)
+    t_avg = avg(t_avg_tbl,33)]]
+    t_avg = t_avg + (t - t_avg) / 3
 
     for k,v in ipairs(threshold_start) do
         if t_avg > v or (k <= 2 and t > v) then
