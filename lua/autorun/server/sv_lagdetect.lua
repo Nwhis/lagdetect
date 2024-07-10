@@ -59,7 +59,7 @@ local function Defuse(svr)
         total = total + num
     end
     local percent = math.Round((owners[most]/total)*100,1)
-    local c,n,s = Color(255,255,255),"World",":3"
+    local c,n,s = Color(255,255,255),"World",":3" -- if it's the world, throw some placeholder stuff in
     if not most:IsWorld() then
         c,n,s = team.GetColor(most:Team()),most:GetName(),most:SteamID()
     end
@@ -70,12 +70,12 @@ local function Defuse(svr)
         HSVToColor(90-percent*0.9,0.8,1),owners[most],", ",percent,"%",
         msgcolor,")\n")
     net.Start("lagdetect_notify")
-    net.WriteBool(true)
-    net.WriteEntity(most)
-    net.WriteUInt(owners[most],10)
-    net.WriteUInt(math.Round(percent),7)
-    net.WriteFloat(speed)
-    net.WriteFloat(t)
+    net.WriteBool(true) -- slowdown message
+    net.WriteEntity(most) -- player with most props
+    net.WriteUInt(owners[most],10) -- how many props
+    net.WriteUInt(math.Round(percent),7) -- what percent of all props
+    net.WriteFloat(speed) -- current timescale
+    net.WriteFloat(t) -- lag time
     net.Broadcast()
 end
 
