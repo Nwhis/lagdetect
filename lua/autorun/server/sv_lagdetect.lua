@@ -185,6 +185,7 @@ local overlap_l = 0
 local overlap_n = 0
 hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
     timer.Simple(0,function()
+        if not isValid(ent) then return end
         if not IsValid(ent:GetPhysicsObject()) then return end
         ent.owner = ent:CPPIGetOwner()
         if ent.owner:IsWorld() then return end
