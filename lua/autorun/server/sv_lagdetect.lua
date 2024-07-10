@@ -22,6 +22,7 @@ local function FindIntersects(svr)
     local intersects = {}
     for _,ent in ipairs(allents) do
         ent = ent:GetPhysicsObject()
+        if not IsValid(ent) then continue end
         if not ent:IsPenetrating() then continue end
         table.insert(intersects,ent)
     end
