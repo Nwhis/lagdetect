@@ -125,7 +125,7 @@ local function avg(tbl,div)
     return avg
 end
 hook.Add("Think","lagdetector",function()
-    local mult = 0.5 + speed*0.5
+    local mult = 0.7 + speed*0.3
     t_raw = physenv.GetLastSimulationTime()*1000
     t = math.Round((t_raw-0.001)/mult,2)
     --[[]
