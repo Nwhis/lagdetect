@@ -196,8 +196,7 @@ hook.Add("OnEntityCreated","lagdetect_propspawn",function(ent)
         end
         if #lastcreated == 1 then return end
         overlap = overlap + GetOverlap(ent,lastcreated[#lastcreated-1])
-        overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.8)
-        Notify(true,{overlap,",",overlap_n})
+        overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
         if overlap_n > overlap_l then
             Notify(true,{
                 team.GetColor(ent.owner:Team()),ent.owner:GetName(),
