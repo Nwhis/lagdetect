@@ -222,3 +222,10 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     end
     overlaps[ply].notify = overlap_n
 end)
+
+concommand.Add("lagdetect_debug",function(ply,str,args)
+    print("LagDetect: current ms: "..tostring(t))
+    print("LagDetect: current ms (smoothed): "..tostring(t_avg))
+    print("LagDetect: player dump:")
+    PrintTable(overlaps)
+end)
