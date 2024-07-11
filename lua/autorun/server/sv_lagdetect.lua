@@ -171,7 +171,7 @@ local cached_sizes = {}
 local function GetSmallestSize(ent)
     local cached = cached_sizes[ent:GetModel()]
     if cached then return cached end
-    local ra,rb = ent1:GetPhysicsObject():GetAABB()
+    local ra,rb = ent:GetPhysicsObject():GetAABB()
     local r = math.min(rb.x - ra.x,rb.y - ra.y, rb.z - ra.z)/2
     if table.Count(cached_sizes) > 62 then cached_sizes = {} end
     cached_sizes[ent:GetModel()] = r
