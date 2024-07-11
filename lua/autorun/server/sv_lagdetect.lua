@@ -55,7 +55,7 @@ local function FindIntersects(svr)
             else total = total + 1 ent:EnableMotion(false) end
         end
         Notify(true,{Color(255,150,25),"Severe lag!! Froze all intersecting and constrained props (",total,")"},
-        {"Severe lag!! Froze all intersecting and constrained props ("..tostring(total)..")",4,Color(255,150,0)})
+        {"Severe lag!! Froze all intersecting and constrained props ("..tostring(total)..")",8,Color(255,150,0)})
     end
     return intersects
 end
@@ -68,7 +68,7 @@ local function Defuse(svr)
         msgcolor,")! Slowing down to ",
         Color(120,200,255),tostring(newspeed),
         msgcolor,", and waiting ",Cooldown(level,t),"s"},
-        {m.."Physics timescale set to "..tostring(newspeed),6,Color(255,200,0)})
+        {m.."Physics timescale set to "..tostring(newspeed),Cooldown(level,t),Color(255,200,0)})
     game.ConsoleCommand("phys_timescale "..tostring(newspeed).."\n")
     speed = newspeed
     -- find intersecting props
