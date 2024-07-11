@@ -101,7 +101,7 @@ local function Defuse(svr)
 end
 
 local function CooldownDone() -- begin ramping timescale back up
-    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."},{"Restoring physics timescale...",3,Color(175,255,75)})
+    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."},{"Restoring physics timescale...",4,Color(175,255,75)})
     timer.Create("recover",0.5,0,function()
         if speed == 1 then
             timer.Remove("recover")
@@ -200,14 +200,14 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     local overlap = 0
     local count = 0
     for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
-        if ent == v then continue end
         if not string.StartsWith(v:GetClass(),"prop") then continue end
-        overlap = overlap + GetOverlap(ent,v)
         count = count + 1
+        if ent == v then continue end
+        overlap = overlap + GetOverlap(ent,v)
     end
     overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
 
-    local overlap_n = math.ceil(math.max((overlap/3)-0.85,0)^0.9)
+    local overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
     if overlap_n > overlaps[ply].notify then
         Notify(true,{
             team.GetColor(ply:Team()),ply:GetName(),
