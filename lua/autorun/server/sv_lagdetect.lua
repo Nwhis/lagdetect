@@ -101,7 +101,7 @@ local function Defuse(svr)
 end
 
 local function CooldownDone() -- begin ramping timescale back up
-    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."},{"Restoring physics timescale...",4,Color(175,255,75)})
+    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."},{"Restoring physics timescale...",#speeds+2-level,Color(175,255,75)})
     timer.Create("recover",0.5,0,function()
         if speed == 1 then
             timer.Remove("recover")
@@ -172,6 +172,7 @@ hook.Add("Think","lagdetector",function()
 end)
 local cached_sizes = {}
 local function GetSmallestSize(ent)
+    if not IsValid(ent:GetPhysicsObject()) then return 0 end
     local cached = cached_sizes[ent:GetModel()]
     if cached then return cached end
     local ra,rb = ent:GetPhysicsObject():GetAABB()
@@ -182,6 +183,8 @@ local function GetSmallestSize(ent)
 end
     
 local function GetOverlap(ent1,ent2)
+    if not IsValid(ent1) or not IsValid(ent2) then return 0 end
+    if not IsValid(ent1:GetPhysicsObject()) or not IsValid(ent2:GetPhysicsObject()) then return 0 end
     local p1 = ent1:WorldSpaceCenter()
     local p2 = ent2:WorldSpaceCenter()
     local dist = p1:Distance(p2)
@@ -191,24 +194,26 @@ local function GetOverlap(ent1,ent2)
     return math.Clamp(overlap,0,1)
 end
 
+local monitor_props = CreateConVar("lagdetect_monitor_propspawns",1,FCVAR_NEVER_AS_STRING,"Enable prop spawn monitoring",0,1)
 local overlaps = {} -- tbl of players and how much overlap their latest prop spawns have
 
 hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
-    return -- disable until this is fixed
+    if not monitor_props:GetBool() then return end
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
+    if not ent:GetPhysicsObject():IsMotionEnabled() then return end
     if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
     local overlap = 0
     local count = 0
     for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
+        if not IsValid(ent:GetPhysicsObject()) then continue end
         if not string.StartsWith(v:GetClass(),"prop") then continue end
         count = count + 1
         if ent == v then continue end
         overlap = overlap + GetOverlap(ent,v)
     end
     overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
-
-    local overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
+    local overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.8)
     if overlap_n > overlaps[ply].notify then
         Notify(true,{
             team.GetColor(ply:Team()),ply:GetName(),
@@ -225,18 +230,13 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
 end)
 
 concommand.Add("lagdetect_debug",function(ply,str,args,argstr)
-    --[[
-    print("LagDetect: current ms: "..tostring(t))
-    print("LagDetect: current ms (smoothed): "..tostring(t_avg))
-    print("LagDetect: player dump:")
-    PrintTable(overlaps)]]
     local overlaps_str = ""
     if argstr == "v" then
         overlaps_str = "\nplayer dump:\n"
         for k,v in pairs(overlaps) do
             overlaps_str = overlaps_str.."["..tostring(k).."]:\n"
             for l,b in pairs(v) do
-                overlaps_str = overlaps_str.."    ["..l.."] = "..tostring(b).."\n"
+                overlaps_str = overlaps_str.."\n    ["..l.."] = "..tostring(b)
             end
         end
     end
