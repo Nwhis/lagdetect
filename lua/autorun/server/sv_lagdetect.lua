@@ -194,6 +194,7 @@ end
 local overlaps = {} -- tbl of players and how much overlap their latest prop spawns have
 
 hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
+    return -- disable until this is fixed
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
     if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
