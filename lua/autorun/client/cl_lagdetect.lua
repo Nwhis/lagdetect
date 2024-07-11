@@ -13,3 +13,5 @@ net.Receive("lagdetect_notify",function()
     local msg,time,color = net.ReadString(),net.ReadUInt(6),net.ReadVector():ToColor()
     bs.Notify(msg,time,color,true)
 end)
+
+concommand.Add("lagdetect_debug",function() end)

@@ -224,8 +224,17 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
 end)
 
 concommand.Add("lagdetect_debug",function(ply,str,args)
+    --[[
     print("LagDetect: current ms: "..tostring(t))
     print("LagDetect: current ms (smoothed): "..tostring(t_avg))
     print("LagDetect: player dump:")
-    PrintTable(overlaps)
+    PrintTable(overlaps)]]
+    net.Start("lagdetect_notify")
+    net.WriteTable({msgcolor,"Debug info:",
+        "\ncurrent ms: ",t,
+        "\ncurrent ms (smoothed): ",t_avg,
+        "\nplayer dump:\n",
+        tostring(overlaps)},true)
+    net.WriteBool(false)
+    net.Send(ply)
 end)
