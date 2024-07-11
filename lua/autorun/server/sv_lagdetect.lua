@@ -193,7 +193,7 @@ local overlaps = {} -- tbl of players and how much overlap their latest prop spa
 hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
-    if not overlaps[ply] then overlaps[ply] = 0 end
+    if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
     local overlap = 0
     for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
         if ent == v then continue end
