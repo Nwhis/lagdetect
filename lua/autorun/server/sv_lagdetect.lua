@@ -223,24 +223,27 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     overlaps[ply].notify = overlap_n
 end)
 
-concommand.Add("lagdetect_debug",function(ply,str,args)
+concommand.Add("lagdetect_debug",function(ply,str,args,argstr)
     --[[
     print("LagDetect: current ms: "..tostring(t))
     print("LagDetect: current ms (smoothed): "..tostring(t_avg))
     print("LagDetect: player dump:")
     PrintTable(overlaps)]]
     local overlaps_str = ""
-    for k,v in pairs(overlaps) do
-        overlaps_str = overlaps_str.."["..tostring(k).."]:\n"
-        for l,b in pairs(v) do
-            overlaps_str = overlaps_str.."    ["..l.."] = "..tostring(b).."\n"
+    if argstr == "v" then
+        overlaps_str = "\nplayer dump:\n"
+        for k,v in pairs(overlaps) do
+            overlaps_str = overlaps_str.."["..tostring(k).."]:\n"
+            for l,b in pairs(v) do
+                overlaps_str = overlaps_str.."    ["..l.."] = "..tostring(b).."\n"
+            end
         end
     end
     net.Start("lagdetect_notify")
     net.WriteTable({msgcolor,"Debug info:",
         "\ncurrent ms: ",t,
         "\ncurrent ms (smoothed): ",t_avg,
-        "\nplayer dump:\n",overlaps_str.."\n"},true)
+        overlaps_str.."\n"},true)
     net.WriteBool(false)
     net.Send(ply)
 end)
