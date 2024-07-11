@@ -241,8 +241,8 @@ concommand.Add("lagdetect_debug",function(ply,str,args,argstr)
     end
     net.Start("lagdetect_notify")
     net.WriteTable({msgcolor,"Debug info:",
-        "\ncurrent ms: ",t,
-        "\ncurrent ms (smoothed): ",t_avg,
+        "\ncurrent ms (instant) : ",t,
+        "\ncurrent ms (smoothed): ",math.Round(t_avg,3),
         overlaps_str},true)
     net.WriteBool(false)
     net.Send(ply)
