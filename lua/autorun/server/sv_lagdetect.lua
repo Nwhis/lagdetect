@@ -196,6 +196,7 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     local overlap = 0
     for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
         if ent == v then continue end
+        if not string.StartsWith(ent:GetClass(),"prop") then continue end
         overlap = overlap + GetOverlap(ent,v)
     end
     overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
