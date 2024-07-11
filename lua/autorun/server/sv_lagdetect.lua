@@ -229,12 +229,18 @@ concommand.Add("lagdetect_debug",function(ply,str,args)
     print("LagDetect: current ms (smoothed): "..tostring(t_avg))
     print("LagDetect: player dump:")
     PrintTable(overlaps)]]
+    local overlaps_str = ""
+    for k,v in pairs(overlaps) do
+        overlaps_str = overlaps_str.."["..tostring(k).."]:\n"
+        for l,b in pairs(v) do
+            overlaps_str = overlaps_str.."    ["..l.."] = "..tostring(b).."\n"
+        end
+    end
     net.Start("lagdetect_notify")
     net.WriteTable({msgcolor,"Debug info:",
         "\ncurrent ms: ",t,
         "\ncurrent ms (smoothed): ",t_avg,
-        "\nplayer dump:\n",
-        tostring(overlaps)},true)
+        "\nplayer dump:\n",overlaps_str.."\n"},true)
     net.WriteBool(false)
     net.Send(ply)
 end)
