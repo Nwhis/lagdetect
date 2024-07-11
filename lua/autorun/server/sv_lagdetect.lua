@@ -214,7 +214,7 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
             msgcolor," is spawning a lot of intersecting props! (",
             HSVToColor(math.max(0,75 - count*3),0.8,1),count,
             msgcolor," props, ",
-            HSVToColor(math.max(0,90 - (overlap/(count-1)*90),0.8,1)),math.Round(overlap,2),
+            HSVToColor(math.max(0,90 - overlap/(count-1)*90),0.8,1),math.Round(overlap,2),
             msgcolor," total overlap)"},
             {m..ply:GetName().." is spawning a lot of intersecting props! ("..tostring(count)..")",
             math.min(4+overlap_n,12),Color(255,200,0)
