@@ -203,7 +203,7 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
 
     local overlap_n = math.ceil(math.max((overlap/3)-0.5,0)^0.9)
-    if overlap_n > overlap[ply].notify then
+    if overlap_n > overlaps[ply].notify then
         Notify(true,{
             team.GetColor(ply:Team()),ply:GetName(),
             msgcolor," is spawning a lot of intersecting props! (",
