@@ -55,7 +55,7 @@ local function FindIntersects(svr)
             else total = total + 1 ent:EnableMotion(false) end
         end
         Notify(true,{Color(255,150,25),"Severe lag!! Froze all intersecting and constrained props (",total,")"},
-        {"Severe lag!! Froze all intersecting and constrained props ("..tostring(total)..")",8,Color(255,150,0)})
+        {m.."Severe lag!! Froze all intersecting and constrained props ("..tostring(total)..")",8,Color(255,150,0)})
     end
     return intersects
 end
@@ -96,18 +96,18 @@ local function Defuse(svr)
         msgcolor," [",s,"] has the most (",
         HSVToColor(90-percent*0.9,0.8,1),owners[most],", ",percent,"%",
         msgcolor,")"},
-        {"[LagDetect] "..n.." has "..tostring(owners[most]).." intersecting props ("..tostring(percent).."%)",10,Color(255,125,0)}
+        {m..n.." has "..tostring(owners[most]).." intersecting props ("..tostring(percent).."%)",10,Color(255,125,0)}
     )
 end
 
 local function CooldownDone() -- begin ramping timescale back up
-    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."})
+    Notify(false,{Color(175,255,75),"Low lag detected, returning to normal speed..."},{"Restoring physics timescale...",3,Color(175,255,75)})
     timer.Create("recover",0.5,0,function()
         if speed == 1 then
             timer.Remove("recover")
             level = #speeds+1
             Notify(false,{Color(50,255,0),"No lag detected, timescale returned to normal!"},
-                {"[LagDetect] Physics timescale restored!",4,Color(50,255,0)})
+                {m.."Physics timescale restored!",4,Color(50,255,0)})
             return
         end
         speed = math.Round(math.min(speed*1.33 + 0.01,1),2)
@@ -151,7 +151,10 @@ hook.Add("Think","lagdetector",function()
                         timer.Remove("recover")
                         return
                     end
-                    Notify(true,{msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",msgcolor,") Maintaining timescale for ",Cooldown(level,t),"s..."})
+                    Notify(true,{
+                        msgcolor,"Still lagging! (",HSVToColor(-svrcolor + k*svrcolor,0.8,1),tostring(t).."ms",
+                        msgcolor,") Maintaining timescale for ",Cooldown(level,t),"s..."},
+                        {m.."Maintaining timescale...",Cooldown(level,t),Color(255,200,0)})
                     if level == 1 then FindIntersects(1) end
                     timer.Adjust("cooldown",Cooldown(level,t))
                     timer.Start("cooldown")  -- refresh the cooldown
@@ -213,7 +216,7 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
             msgcolor," props, ",
             HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
             msgcolor," total overlap)"},
-            {ply:GetName().." is spawning a lot of intersecting props! ("..tostring(count)..")",
+            {m..ply:GetName().." is spawning a lot of intersecting props! ("..tostring(count)..")",
             math.min(4+overlap_n,12),Color(255,200,0)
         })
     end
