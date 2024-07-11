@@ -14,4 +14,4 @@ net.Receive("lagdetect_notify",function()
     bs.Notify(msg,time,color,true)
 end)
 
-concommand.Add("lagdetect_debug",function() end)
+--concommand.Add("lagdetect_debug",function() end)
