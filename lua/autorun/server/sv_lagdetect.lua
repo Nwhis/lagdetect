@@ -195,10 +195,12 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
     if not IsValid(ent:GetPhysicsObject()) then return end
     if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
     local overlap = 0
+    local count = 0
     for _,v in ipairs(ents.FindInSphere(ent:GetPos(),GetSmallestSize(ent)*2)) do
         if ent == v then continue end
         if not string.StartsWith(v:GetClass(),"prop") then continue end
         overlap = overlap + GetOverlap(ent,v)
+        count = count + 1
     end
     overlaps[ply].overlap = math.max(overlap,overlaps[ply].overlap-1)
 
@@ -207,11 +209,11 @@ hook.Add("PlayerSpawnedProp","lagdetect_propspawn",function(ply,_,ent)
         Notify(true,{
             team.GetColor(ply:Team()),ply:GetName(),
             msgcolor," is spawning a lot of intersecting props! (",
-            HSVToColor(math.max(0,75 - #lastcreated*3),0.8,1),#lastcreated,
+            HSVToColor(math.max(0,75 - count*3),0.8,1),count,
             msgcolor," props, ",
             HSVToColor(math.max(0,75 - overlap*9),0.8,1),math.Round(overlap,2),
             msgcolor," total overlap)"},
-            {ply:GetName().." is spawning a lot of intersecting props! ("..tostring(#lastcreated)..")",
+            {ply:GetName().." is spawning a lot of intersecting props! ("..tostring(count)..")",
             math.min(4+overlap_n,12),Color(255,200,0)
         })
     end
