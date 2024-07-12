@@ -11,8 +11,7 @@ function PANEL:Init()
     self:SetPos(ScrW() - self:GetWide(), ScrH() / 3 - self:GetTall())
 
     self:SetAlpha(0)
-    self:SetScale(1)
-
+    self.Scale = 1
     self.ScaleTween = self.Scale
 end
 
@@ -31,7 +30,7 @@ function PANEL:Reveal(goOut)
     end
 
     self:AlphaTo(0, 0.5)
-    timer.Create("LagDetectPanel", 0.25, 1, function()
+    timer.Create("LagDetectPanel", 0.5, 1, function()
         self.ScaleTween = self.Scale
         self:Hide()
     end)

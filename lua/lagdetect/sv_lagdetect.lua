@@ -56,19 +56,23 @@ local function ChangeTimeScale(scale, duration, svr)
             return
         end
 
+        --[[
         MsgC(p, m, msgcolor, "Maintaining phys_timescale value")
         if duration then
-            MsgC(msgcolor, " for ", svrc, duration, " ms")
+            MsgC(msgcolor, " for ", svrc, duration, " s")
         end
         MsgN("")
+        --]]
 
         return
     end
 
     MsgC(p, m, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale))
+    --[[
     if duration then
-        MsgC(msgcolor, " for ", svrc, duration, " ms")
+        MsgC(msgcolor, " for ", svrc, duration, " s")
     end
+    --]]
     MsgN("")
 
     game.ConsoleCommand("phys_timescale " .. tostring(scale) .. "\n")
