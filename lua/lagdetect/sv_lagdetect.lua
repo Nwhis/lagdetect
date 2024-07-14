@@ -19,7 +19,7 @@ util.AddNetworkString("lagdetect_scale")
 cvars.AddChangeCallback("phys_timescale", function(_, oldScale, scale)
     oldScale, scale = tonumber(oldScale), tonumber(scale)
     if oldScale >= 0.999 and scale >= 0.999 then return end
-    if math.abs(oldScale - scale) <= 0.001 then return end
+    if math.abs(oldScale - scale) <= 0.0001 then return end
 
     net.Start("lagdetect_scale")
         net.WriteFloat(scale)
@@ -27,9 +27,17 @@ cvars.AddChangeCallback("phys_timescale", function(_, oldScale, scale)
 end)
 
 local function Notify(adminOnly, ...)
+    local textTable = {...}
+    local notify = true
+
+    local skip, notify1, textTable1 = hook.Run("lagdetect_notify_server", notify, textTable)
+    if skip == false then return end
+    if notify1 then notify = notify1 end
+    if textTable1 then textTable = textTable1 end
+
     net.Start("lagdetect_notify")
-    net.WriteTable({...}, true)
-    net.WriteBool(true)
+    net.WriteTable(textTable, true)
+    net.WriteBool(notify)
 
     if adminOnly then
         local tbl = {}
@@ -41,7 +49,7 @@ local function Notify(adminOnly, ...)
         net.Broadcast()
     end
 
-    MsgC(p, m, ...)
+    MsgC(p, m, unpack(textTable))
     MsgN("")
 end
 
