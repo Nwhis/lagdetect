@@ -19,19 +19,34 @@ util.AddNetworkString("lagdetect_scale")
 cvars.AddChangeCallback("phys_timescale", function(_, oldScale, scale)
     oldScale, scale = tonumber(oldScale), tonumber(scale)
     if oldScale >= 0.999 and scale >= 0.999 then return end
-    if math.abs(oldScale - scale) <= 0.001 then return end
+    if math.abs(oldScale - scale) <= 0.0001 then return end
 
     net.Start("lagdetect_scale")
         net.WriteFloat(scale)
     net.Broadcast()
 end)
 
-local function Notify(adminOnly, ...)
-    net.Start("lagdetect_notify")
-    net.WriteTable({...}, true)
-    net.WriteBool(true)
+--broadcastType: true for admin only, false for serverside only, nil for all players
+local function Notify(broadcastType, ...)
+    local textTable = {...}
+    local notify = true
 
-    if adminOnly then
+    local skip, notify1, broadcastType1, textTable1 = hook.Run("lagdetect_notify_server", notify, broadcastType, textTable)
+    if skip == false then return end
+    if notify1 ~= nil then notify = notify1 end
+    if textTable1 then textTable = textTable1 end
+    if broadcastType1 ~= nil then broadcastType = broadcastType1 end
+
+    MsgC(p, m, unpack(textTable))
+    MsgN("")
+
+    if broadcastType == false then return end
+
+    net.Start("lagdetect_notify")
+    net.WriteTable(textTable, true)
+    net.WriteBool(notify)
+
+    if broadcastType == true then
         local tbl = {}
         for _, ply in player.Iterator() do
             if ply:IsAdmin() then table.insert(tbl, ply) end
@@ -40,9 +55,6 @@ local function Notify(adminOnly, ...)
     else
         net.Broadcast()
     end
-
-    MsgC(p, m, ...)
-    MsgN("")
 end
 
 local function ChangeTimeScale(scale, duration, svr)
@@ -50,26 +62,13 @@ local function ChangeTimeScale(scale, duration, svr)
 
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
         if scale == 1 then
-            MsgC(p, m, msgcolor, "phys_timescale returned to ", svrc, 1)
-            MsgN("")
-
-            return
+            Notify(false, msgcolor, "phys_timescale returned to ", svrc, 1)
         end
-
-        MsgC(p, m, msgcolor, "Maintaining phys_timescale value")
-        if duration then
-            MsgC(msgcolor, " for ", svrc, duration, " ms")
-        end
-        MsgN("")
 
         return
     end
 
-    MsgC(p, m, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale))
-    if duration then
-        MsgC(msgcolor, " for ", svrc, duration, " ms")
-    end
-    MsgN("")
+    Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale))
 
     game.ConsoleCommand("phys_timescale " .. tostring(scale) .. "\n")
     prev_scale = scale

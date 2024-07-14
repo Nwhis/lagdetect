@@ -20,10 +20,17 @@ hook.Add("InitPostEntity", "lagdetect_usebsnotif", OverrideNotify())
 local p, m = Color(255, 50, 25), "[LagDetect] "
 net.Receive("lagdetect_notify",function()
     local textTable = net.ReadTable(true)
+    local notify = net.ReadBool()
+
+    local skip, notify1, textTable1 = hook.Run("lagdetect_notify_client", notify, textTable)
+    if skip == false then return end
+    if notify1 ~= nil then notify = notify1 end
+    if textTable1 then textTable = textTable1 end
+
     MsgC(p, m, unpack(textTable))
     MsgC("\n")
 
-    if not net.ReadBool() then return end
+    if notify == false then return end
 
     local text = { m }
     for _, v in ipairs(textTable) do
