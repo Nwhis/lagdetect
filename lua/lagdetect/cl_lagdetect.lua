@@ -24,7 +24,7 @@ net.Receive("lagdetect_notify",function()
 
     local skip, notify1, textTable1 = hook.Run("lagdetect_notify_client", notify, textTable)
     if skip == false then return end
-    if notify1 then notify = notify1 end
+    if notify1 ~= nil then notify = notify1 end
     if textTable1 then textTable = textTable1 end
 
     MsgC(p, m, unpack(textTable))
