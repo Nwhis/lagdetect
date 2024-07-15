@@ -62,13 +62,6 @@ end
 local function ChangeTimeScale(scale, ms, svr)
     local svrc = HSVToColor(-svrcolor + (svr or 0) * svrcolor, 0.8, 1)
 
-    if ms then
-        net.Start("lagdetect_scale")
-            net.WriteBool(true)
-            net.WriteFloat(ms)
-        net.Broadcast()
-    end
-
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
         if scale == 1 then
             Notify(false, msgcolor, "phys_timescale returned to ", svrc, 1)
@@ -212,6 +205,7 @@ local function avg(tbl, div)
 end
 --]]
 
+local lastSendTick = CurTime()
 local t_avg = 0
 hook.Add("Think", "lagdetector", function()
     local mult = 0.6 + speed * 0.4
@@ -223,6 +217,15 @@ hook.Add("Think", "lagdetector", function()
     t_avg = avg(t_avg_tbl,33)
     --]]
     t_avg = t_avg + (t - t_avg) / 3
+
+    if timer.Exists("cooldown") and CurTime() - lastSendTick > 1 then
+        net.Start("lagdetect_scale")
+            net.WriteBool(true)
+            net.WriteFloat(t)
+        net.Broadcast()
+
+        lastSendTick = CurTime()
+    end
 
     for k, v in ipairs(threshold_start) do
         if t_avg <= v and (k > 2 or t <= v) then

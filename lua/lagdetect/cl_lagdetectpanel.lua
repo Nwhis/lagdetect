@@ -75,7 +75,7 @@ function PANEL:PaintLastTick()
 
     local clipping = DisableClipping(true)
     draw.Text({
-        text = "tick: " .. self.LastTick .. " ms",
+        text = "tick: " .. math.Round(self.LastTick, 2) .. " ms",
         pos = { self:GetWide() - 2, self:GetTall() + 2 },
         font = "LagDetectTick",
         xalign = TEXT_ALIGN_RIGHT
