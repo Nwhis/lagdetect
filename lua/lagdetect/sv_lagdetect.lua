@@ -12,6 +12,7 @@ local level = #speeds + 1
 local msgcolor = color_white
 local p, m = Color(255, 50, 25), "[LagDetect] "
 local cv = GetConVar("phys_timescale")
+local debug_mode = CreateConVar("lagdetect_debug", 0, FCVAR_NEVER_AS_STRING, "Enable debug printing for LagDetect", 0, 1)
 
 util.AddNetworkString("lagdetect_notify")
 
@@ -22,6 +23,7 @@ cvars.AddChangeCallback("phys_timescale", function(_, oldScale, scale)
     if math.abs(oldScale - scale) <= 0.0001 then return end
 
     net.Start("lagdetect_scale")
+        net.WriteBool(false)
         net.WriteFloat(scale)
     net.Broadcast()
 end)
@@ -43,8 +45,8 @@ local function Notify(broadcastType, ...)
     if broadcastType == false then return end
 
     net.Start("lagdetect_notify")
-    net.WriteTable(textTable, true)
-    net.WriteBool(notify)
+        net.WriteTable(textTable, true)
+        net.WriteBool(notify)
 
     if broadcastType == true then
         local tbl = {}
@@ -57,18 +59,38 @@ local function Notify(broadcastType, ...)
     end
 end
 
-local function ChangeTimeScale(scale, duration, svr)
+local function ChangeTimeScale(scale, ms, svr)
     local svrc = HSVToColor(-svrcolor + (svr or 0) * svrcolor, 0.8, 1)
 
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
         if scale == 1 then
             Notify(false, msgcolor, "phys_timescale returned to ", svrc, 1)
+
+            return
+        end
+
+        if debug_mode:GetBool() then
+            local tick = {}
+            if ms then
+                tick = { msgcolor, " (last tick: ", ms, " ms) (cooldown: ", Cooldown(level, ms), " s)" }
+            end
+
+            Notify(false, msgcolor, "[dbg] maintaining phys_timescale of ", svrc, tostring(scale), unpack(tick))
         end
 
         return
     end
 
-    Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale))
+    local tick = {}
+    if ms then
+        tick = { msgcolor, " (last tick: ", ms, " ms)" }
+
+        if debug_mode:GetBool() then
+            table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
+        end
+    end
+
+    Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale), unpack(tick))
 
     game.ConsoleCommand("phys_timescale " .. tostring(scale) .. "\n")
     prev_scale = scale
@@ -114,16 +136,23 @@ end
 
 local function Defuse(svr)
     local newspeed = speeds[svr]
-    ChangeTimeScale(newspeed, Cooldown(level, t), svr)
+    ChangeTimeScale(newspeed, t, svr)
     speed = newspeed
 
     -- find intersecting props
     local intersects = FindIntersects(svr)
-    if #intersects == 0 then return end
+    if #intersects == 0 then
+        -- not having the possible intersects notification implies zero intersects
+        if debug_mode:GetBool() then
+            Notify(false, msgcolor, "[dbg] Tried defusing without intersects", svr and " (severe)" or "")
+        end
+
+        return
+    end
 
     -- find owner of the most props
     local owners = {}
-    for _,ent in ipairs(intersects) do
+    for _, ent in ipairs(intersects) do
         ent = ent:GetEntity():CPPIGetOwner()
         owners[ent] = (owners[ent] and owners[ent] + 1 or 1)
     end
@@ -176,6 +205,7 @@ local function avg(tbl, div)
 end
 --]]
 
+local lastSendTick = CurTime()
 local t_avg = 0
 hook.Add("Think", "lagdetector", function()
     local mult = 0.6 + speed * 0.4
@@ -187,6 +217,15 @@ hook.Add("Think", "lagdetector", function()
     t_avg = avg(t_avg_tbl,33)
     --]]
     t_avg = t_avg + (t - t_avg) / 3
+
+    if timer.Exists("cooldown") and CurTime() - lastSendTick > 1 then
+        net.Start("lagdetect_scale")
+            net.WriteBool(true)
+            net.WriteFloat(t)
+        net.Broadcast()
+
+        lastSendTick = CurTime()
+    end
 
     for k, v in ipairs(threshold_start) do
         if t_avg <= v and (k > 2 or t <= v) then
@@ -202,6 +241,8 @@ hook.Add("Think", "lagdetector", function()
 
             return
         end
+
+        if level < k then return end
 
         if timer.Exists("cooldown") and timer.TimeLeft("cooldown") < 1.5 then -- if timer is about to expire
             local ts = math.Round(cv:GetFloat(), 2)
@@ -221,7 +262,9 @@ hook.Add("Think", "lagdetector", function()
 
             timer.Adjust("cooldown", Cooldown(level, t))
             timer.Start("cooldown") -- refresh the cooldown
-            ChangeTimeScale(speed, Cooldown(level, t))
+
+            --for displaying the timescale in debug
+            ChangeTimeScale(ts, t)
         end
 
         return
@@ -292,7 +335,7 @@ hook.Add("PlayerSpawnedProp", "lagdetect_propspawn", function(ply, _, ent)
     overlaps[ply].notify = overlap_n
 end)
 
-concommand.Add("lagdetect_debug",function(ply, str, args, argstr)
+concommand.Add("lagdetect_debug_dump", function(ply, str, args, argstr)
     local overlaps_str = ""
     if argstr == "v" then
         overlaps_str = "\nplayer dump:\n"
