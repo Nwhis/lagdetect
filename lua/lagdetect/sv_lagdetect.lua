@@ -69,9 +69,8 @@ local function ChangeTimeScale(scale, ms, svr)
         if debug_mode:GetBool() then
             local tick = {}
             if ms then
-                tick = { msgcolor, " (last tick: ", ms, " ms)" }
+                tick = { msgcolor, " (last tick: ", ms, " ms) (cooldown: ", Cooldown(level, ms), " s)" }
             end
-            table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
 
             Notify(false, msgcolor, "[dbg] maintaining phys_timescale of ", svrc, tostring(scale), unpack(tick))
         end
@@ -82,10 +81,10 @@ local function ChangeTimeScale(scale, ms, svr)
     local tick = {}
     if ms then
         tick = { msgcolor, " (last tick: ", ms, " ms)" }
-    end
 
-    if debug_mode:GetBool() then
-        table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
+        if debug_mode:GetBool() then
+            table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
+        end
     end
 
     Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale), unpack(tick))
@@ -252,7 +251,7 @@ hook.Add("Think", "lagdetector", function()
             timer.Start("cooldown") -- refresh the cooldown
 
             --for displaying the timescale in debug
-            ChangeTimeScale(ts, ms)
+            ChangeTimeScale(ts, t)
         end
 
         return
