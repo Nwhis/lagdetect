@@ -23,6 +23,7 @@ cvars.AddChangeCallback("phys_timescale", function(_, oldScale, scale)
     if math.abs(oldScale - scale) <= 0.0001 then return end
 
     net.Start("lagdetect_scale")
+        net.WriteBool(false)
         net.WriteFloat(scale)
     net.Broadcast()
 end)
@@ -44,8 +45,8 @@ local function Notify(broadcastType, ...)
     if broadcastType == false then return end
 
     net.Start("lagdetect_notify")
-    net.WriteTable(textTable, true)
-    net.WriteBool(notify)
+        net.WriteTable(textTable, true)
+        net.WriteBool(notify)
 
     if broadcastType == true then
         local tbl = {}
@@ -60,6 +61,13 @@ end
 
 local function ChangeTimeScale(scale, ms, svr)
     local svrc = HSVToColor(-svrcolor + (svr or 0) * svrcolor, 0.8, 1)
+
+    if ms then
+        net.Start("lagdetect_scale")
+            net.WriteBool(true)
+            net.WriteFloat(ms)
+        net.Broadcast()
+    end
 
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
         if scale == 1 then

@@ -50,5 +50,11 @@ net.Receive("lagdetect_scale", function()
         lagPanel = vgui.Create("LagDetectPanel")
     end
 
+    if net.ReadBool() then
+        lagPanel:SetLastTick(net.ReadFloat())
+
+        return
+    end
+
     lagPanel:SetScale(net.ReadFloat())
 end)

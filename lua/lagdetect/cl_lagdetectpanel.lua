@@ -13,11 +13,17 @@ function PANEL:Init()
     self:SetAlpha(0)
     self.Scale = 1
     self.ScaleTween = self.Scale
+
+    self.LastTick = -1
 end
 
 function PANEL:SetScale(scale)
     self.Scale = scale
     self:Reveal(scale <= 0.999)
+end
+
+function PANEL:SetLastTick(lastTick)
+    self.LastTick = lastTick
 end
 
 function PANEL:Reveal(goOut)
@@ -43,6 +49,7 @@ function PANEL:Paint(w, h)
     surface.DrawRect(0, 0, w, h)
 
     self:PaintBar(0, h * 0.75, w, h)
+    self:PaintLastTick()
 end
 
 local blur = Material("pp/blurscreen")
@@ -60,6 +67,19 @@ function PANEL:Blur()
         surface.DrawTexturedRect(-x, -y, ScrW(), ScrH())
     end
 
+    DisableClipping(clipping)
+end
+
+function PANEL:PaintLastTick()
+    if self.LastTick < 0 then return end
+
+    local clipping = DisableClipping(true)
+    draw.Text({
+        text = "tick: " .. self.LastTick .. " ms",
+        pos = { self:GetWide() - 2, self:GetTall() + 2 },
+        font = "LagDetectTick",
+        xalign = TEXT_ALIGN_RIGHT
+    })
     DisableClipping(clipping)
 end
 
