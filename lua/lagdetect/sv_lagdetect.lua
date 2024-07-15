@@ -12,6 +12,7 @@ local level = #speeds + 1
 local msgcolor = color_white
 local p, m = Color(255, 50, 25), "[LagDetect] "
 local cv = GetConVar("phys_timescale")
+local debug_mode = CreateConVar("lagdetect_debug", 0, FCVAR_NEVER_AS_STRING, "Enable debug printing for LagDetect", 0, 1)
 
 util.AddNetworkString("lagdetect_notify")
 
@@ -57,7 +58,7 @@ local function Notify(broadcastType, ...)
     end
 end
 
-local function ChangeTimeScale(scale, duration, svr)
+local function ChangeTimeScale(scale, ms, svr)
     local svrc = HSVToColor(-svrcolor + (svr or 0) * svrcolor, 0.8, 1)
 
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
@@ -65,10 +66,29 @@ local function ChangeTimeScale(scale, duration, svr)
             Notify(false, msgcolor, "phys_timescale returned to ", svrc, 1)
         end
 
+        if debug_mode:GetBool() then
+            local tick = {}
+            if ms then
+                tick = { msgcolor, " (last tick: ", ms, " ms)" }
+            end
+            table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
+
+            Notify(false, msgcolor, "[dbg] maintaining phys_timescale of ", svrc, tostring(scale), unpack(tick))
+        end
+
         return
     end
 
-    Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale))
+    local tick = {}
+    if ms then
+        tick = { msgcolor, " (last tick: ", ms, " ms)" }
+    end
+
+    if debug_mode:GetBool() then
+        table.Add(tick, { " (cooldown: ", Cooldown(level, ms), " s)" })
+    end
+
+    Notify(false, msgcolor, "Setting phys_timescale to ", svrc, tostring(scale), unpack(tick))
 
     game.ConsoleCommand("phys_timescale " .. tostring(scale) .. "\n")
     prev_scale = scale
@@ -114,16 +134,23 @@ end
 
 local function Defuse(svr)
     local newspeed = speeds[svr]
-    ChangeTimeScale(newspeed, Cooldown(level, t), svr)
+    ChangeTimeScale(newspeed, t, svr)
     speed = newspeed
 
     -- find intersecting props
     local intersects = FindIntersects(svr)
-    if #intersects == 0 then return end
+    if #intersects == 0 then
+        -- not having the possible intersects notification implies zero intersects
+        if debug_mode:GetBool() then
+            Notify(false, msgcolor, "[dbg] Tried defusing without intersects", svr and " (severe)" or "")
+        end
+
+        return
+    end
 
     -- find owner of the most props
     local owners = {}
-    for _,ent in ipairs(intersects) do
+    for _, ent in ipairs(intersects) do
         ent = ent:GetEntity():CPPIGetOwner()
         owners[ent] = (owners[ent] and owners[ent] + 1 or 1)
     end
@@ -203,6 +230,8 @@ hook.Add("Think", "lagdetector", function()
             return
         end
 
+        if level < k then return end
+
         if timer.Exists("cooldown") and timer.TimeLeft("cooldown") < 1.5 then -- if timer is about to expire
             local ts = math.Round(cv:GetFloat(), 2)
 
@@ -221,7 +250,9 @@ hook.Add("Think", "lagdetector", function()
 
             timer.Adjust("cooldown", Cooldown(level, t))
             timer.Start("cooldown") -- refresh the cooldown
-            ChangeTimeScale(speed, Cooldown(level, t))
+
+            --for displaying the timescale in debug
+            ChangeTimeScale(ts, ms)
         end
 
         return
@@ -292,7 +323,7 @@ hook.Add("PlayerSpawnedProp", "lagdetect_propspawn", function(ply, _, ent)
     overlaps[ply].notify = overlap_n
 end)
 
-concommand.Add("lagdetect_debug",function(ply, str, args, argstr)
+concommand.Add("lagdetect_debug_dump", function(ply, str, args, argstr)
     local overlaps_str = ""
     if argstr == "v" then
         overlaps_str = "\nplayer dump:\n"
