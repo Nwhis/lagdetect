@@ -64,6 +64,8 @@ local function ChangeTimeScale(scale, ms, svr)
     if math.abs(cv:GetFloat() - scale) <= 0.001 then
         if scale == 1 then
             Notify(false, msgcolor, "phys_timescale returned to ", svrc, 1)
+
+            return
         end
 
         if debug_mode:GetBool() then
