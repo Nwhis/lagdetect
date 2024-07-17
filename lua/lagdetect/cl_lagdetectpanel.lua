@@ -3,6 +3,11 @@ surface.CreateFont("LagDetect",{
     size = 18,
     italic = true,
 })
+surface.CreateFont("LagDetectTick",{
+    font = "Arial",
+    size = 14,
+    italic = false,
+})
 
 local PANEL = {}
 
