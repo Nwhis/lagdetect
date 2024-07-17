@@ -310,6 +310,8 @@ hook.Add("PlayerSpawnedProp", "lagdetect_propspawn", function(ply, _, ent)
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
     timer.Simple(0,function()
+        if not IsValid(ent) then return end
+        if not IsValid(ent:GetPhysicsObject()) then return end
         if not ent:GetPhysicsObject():IsMotionEnabled() then return end
 
         if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
