@@ -309,38 +309,40 @@ hook.Add("PlayerSpawnedProp", "lagdetect_propspawn", function(ply, _, ent)
     if not monitor_props:GetBool() then return end
     if not IsValid(ent) then return end
     if not IsValid(ent:GetPhysicsObject()) then return end
-    if not ent:GetPhysicsObject():IsMotionEnabled() then return end
+    timer.Simple(0,function()
+        if not ent:GetPhysicsObject():IsMotionEnabled() then return end
 
-    if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
+        if not overlaps[ply] then overlaps[ply] = {overlap = 0, notify = 0} end
 
-    local overlap = 0
-    local count = 0
-    for _, v in ipairs(ents.FindInSphere(ent:GetPos(), GetSmallestSize(ent) * 2)) do
-        if not IsValid(ent:GetPhysicsObject()) then continue end
-        if not string.StartsWith(v:GetClass(),"prop") then continue end
+        local overlap = 0
+        local count = 0
+        for _, v in ipairs(ents.FindInSphere(ent:GetPos(), GetSmallestSize(ent) * 2)) do
+            if not IsValid(ent:GetPhysicsObject()) then continue end
+            if not string.StartsWith(v:GetClass(),"prop") then continue end
 
-        count = count + 1
-        if ent == v then continue end
+            count = count + 1
+            if ent == v then continue end
 
-        overlap = overlap + GetOverlap(ent, v)
-    end
+            overlap = overlap + GetOverlap(ent, v)
+        end
 
-    overlaps[ply].overlap = math.max(overlap, overlaps[ply].overlap - 1)
-    local overlap_n = math.ceil(math.max((overlap / 3) - 0.5, 0) ^ 0.8)
-    if overlap_n > overlaps[ply].notify then
-        Notify(true, team.GetColor(ply:Team()), ply:GetName(), msgcolor, " is spawning a lot of intersecting props! (",
-                HSVToColor(math.max(0, 75 - count * 3), 0.8, 1), count, msgcolor, " props, ",
-                HSVToColor(math.max(0, 90 - overlap / (count - 1) * 90), 0.8, 1), math.Round(overlap, 2), msgcolor, " total overlap)")
-    end
-    overlaps[ply].notify = overlap_n
+        overlaps[ply].overlap = math.max(overlap, overlaps[ply].overlap - 1)
+        local overlap_n = math.ceil(math.max((overlap / 3) - 0.5, 0) ^ 0.8)
+        if overlap_n > overlaps[ply].notify then
+            Notify(true, team.GetColor(ply:Team()), ply:GetName(), msgcolor, " is spawning a lot of intersecting props! (",
+                    HSVToColor(math.max(0, 75 - count * 3), 0.8, 1), count, msgcolor, " props, ",
+                    HSVToColor(math.max(0, 90 - overlap / (count - 1) * 90), 0.8, 1), math.Round(overlap, 2), msgcolor, " total overlap)")
+        end
+        overlaps[ply].notify = overlap_n
+    end)
 end)
 
 concommand.Add("lagdetect_debug_dump", function(ply, str, args, argstr)
     local overlaps_str = ""
     if argstr == "v" then
-        overlaps_str = "\nplayer dump:\n"
+        overlaps_str = "\nplayer dump:"
         for k, v in pairs(overlaps) do
-            overlaps_str = overlaps_str .. "[" .. tostring(k) .. "]:\n"
+            overlaps_str = overlaps_str .. "\n[" .. tostring(k) .. "]:\n"
             for l, b in pairs(v) do
                 overlaps_str = overlaps_str .. "\n    [" .. l .. "] = " .. tostring(b)
             end
