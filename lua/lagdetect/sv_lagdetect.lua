@@ -219,7 +219,7 @@ hook.Add("Think", "lagdetector", function()
     if #t_avg_tbl > 33 then table.remove(t_avg_tbl,1) end
     t_avg = avg(t_avg_tbl,33)
     --]]
-    t_avg = t_avg + (t - t_avg) / 3
+    t_avg = t_avg + (t - t_avg) / 6
 
     if timer.Exists("cooldown") and CurTime() - lastSendTick > 1 then
         net.Start("lagdetect_scale")
