@@ -13,6 +13,8 @@ local msgcolor = color_white
 local p, m = Color(255, 50, 25), "[LagDetect] "
 local cv = GetConVar("phys_timescale")
 local debug_mode = CreateConVar("lagdetect_debug", 0, FCVAR_NEVER_AS_STRING, "Enable debug printing for LagDetect", 0, 1)
+local cv_enabled = CreateConVar("lagdetect_enabled",1,FCVAR_NEVER_AS_STRING,"Enable lag detection/mitigation",0,1)
+local cv_minlag = CreateConVar("lagdetect_mintrigger",0,FCVAR_NEVER_AS_STRING,"Minimum lag amount to trigger (in ms). Set this higher to lower sensitivity",0,10000)
 
 util.AddNetworkString("lagdetect_notify")
 
@@ -208,6 +210,7 @@ end
 local lastSendTick = CurTime()
 local t_avg = 0
 hook.Add("Think", "lagdetector", function()
+    if not cv_enabled:GetBool() then return end
     local mult = 0.6 + speed * 0.4
     t_raw = physenv.GetLastSimulationTime() * 1000
     t = math.Round((t_raw - 0.001) / mult, 2)
@@ -226,6 +229,8 @@ hook.Add("Think", "lagdetector", function()
 
         lastSendTick = CurTime()
     end
+
+    if t < cv_minlag:GetFloat() then return end -- if the lag is less than the threshold then just ignore it
 
     for k, v in ipairs(threshold_start) do
         if t_avg <= v and (k > 2 or t <= v) then
