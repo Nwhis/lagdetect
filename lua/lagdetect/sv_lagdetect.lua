@@ -156,7 +156,9 @@ local function Defuse(svr)
     local owners = {}
     for _, ent in ipairs(intersects) do
         ent = ent:GetEntity():CPPIGetOwner()
-        owners[ent] = (owners[ent] and owners[ent] + 1 or 1)
+        if IsValid(ent) then
+            owners[ent] = (owners[ent] or 0) + 1
+        end
     end
 
     local most = table.GetWinningKey(owners)
