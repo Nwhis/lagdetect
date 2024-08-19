@@ -1,21 +1,7 @@
 local function Notify(msg)
+    if hook.Run("LagDetect_Notify", msg) == false then return end
     notification.AddLegacy(msg, 0, 5)
 end
-
-local set = true
-local function OverrideNotify()
-    if not bs or not set then
-        return
-    end
-
-    set = nil
-    function Notify(msg)
-        bs.Notify(msg, nil, bs.Color.SAM, true)
-    end
-end
-
-OverrideNotify()
-hook.Add("InitPostEntity", "lagdetect_usebsnotif", OverrideNotify())
 
 local p, m = Color(255, 50, 25), "[LagDetect] "
 net.Receive("lagdetect_notify",function()
