@@ -13,7 +13,7 @@ local msgcolor = color_white
 local p, m = Color(255, 50, 25), "[LagDetect] "
 local cv = GetConVar("phys_timescale")
 local debug_mode = CreateConVar("lagdetect_debug", 0, FCVAR_NEVER_AS_STRING, "Enable debug printing for LagDetect", 0, 1)
-local cv_enabled = CreateConVar("lagdetect_enabled",1,FCVAR_NEVER_AS_STRING,"Enable lag detection/mitigation",0,1)
+local cv_enabled = CreateConVar("lagdetect_enabled",1,FCVAR_NEVER_AS_STRING,"Enable lag detection/mitigation (RECOMMENDATION: Leave this on, and set mintrigger higher to save from a worst case scenario!)",0,1)
 local cv_minlag = CreateConVar("lagdetect_mintrigger",0,FCVAR_NEVER_AS_STRING,"Minimum lag amount to trigger (in ms). Set this higher to lower sensitivity",0,10000)
 
 util.AddNetworkString("lagdetect_notify")
@@ -169,7 +169,7 @@ local function Defuse(svr)
     end
 
     local percent = math.Round((owners[most] / total) * 100, 1)
-    local c, n, s = color_white, "World", ":3" -- if it's the world, throw some placeholder stuff in
+    local c, n, s = color_white, "[[WORLD]]", "World" -- if it's the world, throw some placeholder stuff in
     if not most:IsWorld() then
         c, n, s = team.GetColor(most:Team()), most:GetName(), most:SteamID()
     end
