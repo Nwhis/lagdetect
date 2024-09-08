@@ -104,12 +104,12 @@ local function FindIntersects(svr)
 
     local intersects = {}
     for _, ent in ipairs(allents) do
-        ent = ent:GetPhysicsObject()
+        local physobj = ent:GetPhysicsObject()
 
-        if not IsValid(ent) then continue end
-        if not ent:IsPenetrating() then continue end
+        if not IsValid(physobj) then continue end
+        if not physobj:IsPenetrating() then continue end
 
-        table.insert(intersects, ent)
+        table.insert(intersects, physobj)
     end
 
     -- svr = it is very dangerous and we must deal with it
@@ -118,16 +118,15 @@ local function FindIntersects(svr)
     end
 
     local total = 0
-    for _, ent in ipairs(intersects) do
-        local realent = ent:GetEntity()
-        if constraint.HasConstraints(realent) then
-            for k, v in ipairs(constraint.GetAllConstrainedEntities(realent)) do
+    for _, physobj in ipairs(intersects) do
+        total = total + 1
+        physobj:EnableMotion(false)
+        local ent = physobj:GetEntity()
+        if constraint.HasConstraints(ent) then
+            for k, v in ipairs(constraint.GetAllConstrainedEntities(ent)) do
                 total = total + 1
-                ent:EnableMotion(false)
+                physobj:EnableMotion(false)
             end
-        else
-            total = total + 1
-            ent:EnableMotion(false)
         end
     end
 
@@ -154,12 +153,14 @@ local function Defuse(svr)
 
     -- find owner of the most props
     local owners = {}
-    for _, ent in ipairs(intersects) do
-        ent = ent:GetEntity():CPPIGetOwner()
-        if IsValid(ent) then
-            owners[ent] = (owners[ent] or 0) + 1
+    for _, physobj in ipairs(intersects) do
+        local ent = physobj:GetEntity()
+        local owner = ent.CPPIGetOwner and ent:CPPIGetOwner() or nil
+        if owner and (IsValid(owner) or owner:IsWorld()) then
+            owners[owner] = (owners[owner] or 0) + 1
         end
     end
+    if #owners == 0 then return end
 
     local most = table.GetWinningKey(owners)
     local total = 0
