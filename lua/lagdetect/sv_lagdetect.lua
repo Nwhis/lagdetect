@@ -287,6 +287,10 @@ local function GetSmallestSize(ent)
     if cached then return cached end
 
     local ra, rb = ent:GetPhysicsObject():GetAABB()
+    if not ra then
+        print("[LagDetect] Invalid AABB detected for prop "..ent:GetModel()..", entity "..tostring(ent))
+        ra,rb = Vector(),Vector()
+    end
     local r = math.min(rb.x - ra.x, rb.y - ra.y, rb.z - ra.z) / 2
 
     if table.Count(cached_sizes) > 62 then cached_sizes = {} end
